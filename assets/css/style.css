@@ -480,25 +480,34 @@ section, footer.contact {
 .copyright { font-size: 0.78rem; color: var(--fg-dim); }
 
 /* ---------------------------------------------
-   Placeholder visual blocks (stand-ins for real imagery)
+   Generative artwork blocks (stand-ins for real project imagery)
 --------------------------------------------- */
 .placeholder-block {
   position: relative;
   width: 100%;
   height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: rgba(243, 241, 234, 0.5);
-  font-family: var(--font-display);
-  font-weight: 600;
-  font-size: 2rem;
+  overflow: hidden;
 }
-.placeholder-block--about { background: linear-gradient(160deg, #1c1c1f, #2c2c1a 60%, #cdfd50 140%); font-size: 3rem; }
-.placeholder-block--01 { background: linear-gradient(160deg, #1a1a1c, #2b3b2c); }
-.placeholder-block--02 { background: linear-gradient(160deg, #1a1a1c, #3b2c2c); }
-.placeholder-block--03 { background: linear-gradient(160deg, #1a1a1c, #2c2b3b); }
-.placeholder-block--04 { background: linear-gradient(160deg, #1a1a1c, #3b3a2c); }
+.placeholder-block svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.placeholder-block svg .spin-slow {
+  transform-box: fill-box;
+  transform-origin: center;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .placeholder-block svg .spin-slow {
+    animation: spin-slow 40s linear infinite;
+  }
+}
+@keyframes spin-slow {
+  to { transform: rotate(360deg); }
+}
 
 /* ---------------------------------------------
    Responsive
