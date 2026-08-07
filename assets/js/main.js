@@ -202,3 +202,56 @@ if (!isTouch) {
     });
   });
 }
+
+/* ---------------------------------------------
+   Mobile menu
+--------------------------------------------- */
+const burger = document.querySelector(".nav__burger");
+const mobileMenu = document.querySelector(".mobile-menu");
+const mobileLinks = mobileMenu.querySelectorAll("a");
+let menuOpen = false;
+
+/* autoAlpha + yPercent are set here (not in CSS) so GSAP owns the
+   transform from the start — animating yPercent against a transform
+   that originated as a CSS percentage bakes it into a fixed px value
+   instead, which is the bug that silently broke the hero reveal. */
+gsap.set(mobileMenu, { yPercent: -100, autoAlpha: 1 });
+
+function setMenu(open) {
+  menuOpen = open;
+  burger.classList.toggle("is-open", open);
+  burger.setAttribute("aria-expanded", String(open));
+  document.documentElement.style.overflow = open ? "hidden" : "";
+
+  gsap.to(mobileMenu, {
+    yPercent: open ? 0 : -100,
+    duration: prefersReducedMotion ? 0.01 : 0.6,
+    ease: "power4.inOut",
+  });
+
+  if (open) {
+    gsap.fromTo(
+      mobileLinks,
+      { y: 30, opacity: 0 },
+      {
+        y: 0,
+        opacity: 1,
+        duration: prefersReducedMotion ? 0.01 : 0.5,
+        stagger: 0.06,
+        ease: "power3.out",
+        delay: prefersReducedMotion ? 0 : 0.25,
+      }
+    );
+  }
+}
+
+burger.addEventListener("click", () => setMenu(!menuOpen));
+mobileLinks.forEach((link) => link.addEventListener("click", () => setMenu(false)));
+
+window.addEventListener("keydown", (e) => {
+  if (e.key === "Escape" && menuOpen) setMenu(false);
+});
+
+window.matchMedia("(min-width: 901px)").addEventListener("change", (e) => {
+  if (e.matches && menuOpen) setMenu(false);
+});
