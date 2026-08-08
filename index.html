@@ -69,8 +69,7 @@
   .photo{position:relative;justify-self:center;perspective:900px;opacity:0;transform:translateY(20px) scale(.96);transition:.9s var(--ease) .3s}
   body.ready .photo{opacity:1;transform:none}
   .photo .frame{position:relative;width:min(320px,74vw);aspect-ratio:1;border-radius:20px;overflow:hidden;border:1px solid var(--line);background:var(--card);transition:transform .2s var(--ease);will-change:transform}
-  .photo .frame img{width:100%;height:100%;object-fit:cover;display:block}
-  .photo .frame .ph-fallback{width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-family:var(--display);font-weight:800;font-size:88px;letter-spacing:-.03em;color:var(--accent)}
+  .photo .frame img{width:100%;height:100%;object-fit:cover;object-position:50% 18%;display:block}
   .photo .frame::after{content:"";position:absolute;inset:0;box-shadow:inset 0 0 0 3px var(--accent);border-radius:20px;opacity:.9}
   .photo .badge{position:absolute;bottom:-14px;left:-14px;background:var(--accent);color:#fff;font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;padding:9px 14px;border-radius:100px;z-index:2}
   @media(max-width:860px){.photo{order:-1;margin-bottom:8px}}
@@ -200,7 +199,7 @@
         </div>
       </div>
       <div class="photo" id="photo">
-        <div class="frame"><div class="ph-fallback">JH</div></div>
+        <div class="frame"><img src="assets/images/jahir-hussain.webp" alt="Jahir Hussain"></div>
         <span class="badge">Open to work</span>
       </div>
     </div>
