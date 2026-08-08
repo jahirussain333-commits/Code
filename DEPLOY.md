@@ -1,54 +1,68 @@
-# Deploying the portfolio to InfinityFree
+# Portfolio — build &amp; deploy
 
-`index.html` is the whole site. The photo, all CSS and all JavaScript are embedded
-in that one file — there is nothing else to upload for it to work.
+## What to upload
 
-(`assets/images/jahir-hussain.webp` is kept only as the original photo, in case the
-page needs rebuilding later. It is **not** needed for hosting.)
+**`dist/index.html`** — that one file is the whole site. Your photo, all CSS and all
+JavaScript are inside it. Nothing else needs to go up.
 
-## Where to put it
+| File | What it is |
+| --- | --- |
+| `dist/index.html` | **Upload this.** Self-contained, ~232 KB. |
+| `index.html` | Editable source. Same page, but loads the photo from `assets/`. |
+| `assets/images/jahir-hussain.webp` | The original photo. |
 
-You already run the Leo Sports Store (WordPress) on `jahir.rf.gd`. WordPress uses
-`index.php` at the root of `htdocs`, so **do not** drop `index.html` directly into
-`htdocs` — most servers serve `index.html` before `index.php`, which would hide the
-store behind the portfolio.
+Only the fonts come from Google Fonts over the network; everything else is embedded.
 
-Pick one of these instead:
+## Uploading to InfinityFree
 
-**Option A — portfolio as a sub-page of the existing site (recommended)**
+You already run the Leo Sports Store (WordPress) on `jahir.rf.gd`. WordPress serves
+`index.php` from the root of `htdocs`, and most servers try `index.html` **first** — so
+putting this at the root would hide the store behind the portfolio. Use a subfolder:
 
-1. Log in to InfinityFree → **Control Panel** → **File Manager** (or connect over FTP).
-2. Open `htdocs`.
-3. Create a new folder called `portfolio`.
-4. Upload `index.html` into `htdocs/portfolio/`.
-5. Visit **`https://jahir.rf.gd/portfolio/`**
+1. InfinityFree → **Control Panel** → **File Manager** (or FTP).
+2. Open `htdocs`, create a folder named `portfolio`.
+3. Upload `dist/index.html` into `htdocs/portfolio/` (keep the name `index.html`).
+4. Open **`https://jahir.rf.gd/portfolio/`**
 
-**Option B — portfolio on its own domain/subdomain**
+Then enable the free SSL certificate from the control panel so it serves over `https`.
 
-1. InfinityFree → **Domains** → add a subdomain (e.g. `me.jahir.rf.gd`) or a new account.
-2. Upload `index.html` into that domain's own `htdocs` folder.
-3. Visit the new address.
+New uploads can take a few minutes to appear; a hard refresh (Ctrl/Cmd + Shift + R)
+clears a stale copy.
 
-## After uploading
-
-- Free InfinityFree accounts can take a few minutes to propagate, and new
-  subdomains can take longer. A hard refresh (Ctrl/Cmd + Shift + R) clears a stale cache.
-- Turn on free SSL from the control panel so the site loads over `https://`.
+To host it on its own address instead, add a subdomain under **Domains** and upload the
+same file to that domain's own `htdocs`.
 
 ## Editing later
 
-Everything is in `index.html` — open it in any text editor.
+Edit `index.html` (the readable one), then rebuild the upload file:
 
-- Text, job entries, skills: edit the HTML directly.
-- Colours: the `:root` block at the top of the `<style>` tag. `--accent` is the crimson.
-- Rotating headline words: the `words` array in the `<script>` at the bottom.
+```bash
+python3 build.py          # writes dist/index.html
+```
 
-## Optional: link preview image
+Common changes, all in `index.html`:
 
-When the page is shared on LinkedIn or WhatsApp it currently shows the title and
-description but no picture. To add one, upload a photo (e.g. `preview.jpg`) next to
-`index.html` and add this line inside `<head>`, using the real URL:
+- **Text, jobs, skills** — plain HTML, edit in place. Skill chips need a
+  `data-cat` of `data`, `crm`, `out` or `mkt` so the filter picks them up.
+- **Colours** — the `:root` block at the top of the `<style>`. `--signal` is the ember,
+  `--data` the teal.
+- **Job duration bars** — each has `data-m="<months>"`; the `MAX` constant in the
+  experience script is the longest tenure, so bars stay proportional.
+- **Rotating tool ticker** — the `tools` array near the top of the `<script>`.
+
+## Link previews
+
+Shared on LinkedIn or WhatsApp the page shows its title and description but no picture.
+To add one, upload an image next to the page and add this to `<head>` with the real URL:
 
 ```html
 <meta property="og:image" content="https://jahir.rf.gd/portfolio/preview.jpg">
 ```
+
+## Notes
+
+- Everything degrades safely: with JavaScript blocked the full page still renders and
+  reads — animations simply don't run.
+- `prefers-reduced-motion` is respected throughout; the particle field renders one
+  static resolved frame instead of animating.
+- The hero canvas stops drawing once scrolled out of view, so it doesn't drain battery.
