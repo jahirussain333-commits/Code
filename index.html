@@ -1,324 +1,358 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Jahir Hussain — Creative Developer</title>
-<meta name="description" content="Portfolio of Jahir Hussain, creative developer crafting immersive digital experiences." />
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="assets/css/style.css" />
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Jahir Hussain — Growth &amp; Operations</title>
+<meta name="description" content="Jahir Hussain — Growth & Operations Specialist. B2B data, lead generation and CRM-driven pipelines. Chennai, India.">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700;12..96,800&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#131318;--paper:#F1EEE8;--paper-2:#E7E1D5;--card:#EAE4D8;
+    --accent:#D62246;          /* crimson — single loud colour */
+    --accent-dk:#7E1228;
+    --line:rgba(19,19,24,.14);--muted:#5b5b63;
+    --ease:cubic-bezier(.22,1,.36,1);
+    --display:'Bricolage Grotesque',system-ui,sans-serif;
+    --body:'Inter',system-ui,sans-serif;
+    --mono:'JetBrains Mono',ui-monospace,monospace;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{background:var(--paper);color:var(--ink);font-family:var(--body);font-size:17px;line-height:1.55;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+  a{color:inherit;text-decoration:none}
+  ::selection{background:var(--accent);color:#fff}
+  .wrap{max-width:1200px;margin:0 auto;padding:0 clamp(20px,4vw,44px)}
+  .mono{font-family:var(--mono);font-size:12px;letter-spacing:.12em;text-transform:uppercase}
+
+  #prog{position:fixed;top:0;left:0;height:3px;width:0;background:var(--accent);z-index:200;transition:width .1s linear}
+
+  header{position:sticky;top:0;z-index:100;background:color-mix(in srgb,var(--paper) 85%,transparent);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+  .bar{display:flex;align-items:center;justify-content:space-between;height:64px}
+  .mark{font-family:var(--display);font-weight:800;font-size:20px;letter-spacing:-.02em}
+  .mark b{color:var(--accent)}
+  nav{display:flex;gap:26px}
+  nav a{font-family:var(--mono);font-size:12px;letter-spacing:.1em;text-transform:uppercase;position:relative}
+  nav a::after{content:"";position:absolute;left:0;right:100%;bottom:-4px;height:2px;background:var(--accent);transition:right .35s var(--ease)}
+  nav a:hover::after{right:0}
+  @media(max-width:760px){nav{display:none}}
+
+  /* HERO */
+  .hero{position:relative;padding:clamp(52px,9vw,104px) 0 clamp(40px,6vw,72px);overflow:hidden}
+  .pipe{position:absolute;inset:0;z-index:0;opacity:.5;pointer-events:none}
+  .hero .wrap{position:relative;z-index:1}
+  .hgrid{display:grid;grid-template-columns:1.5fr .9fr;gap:clamp(28px,5vw,64px);align-items:center}
+  @media(max-width:860px){.hgrid{grid-template-columns:1fr}}
+  .tag{display:flex;gap:14px;align-items:center;color:var(--accent);margin-bottom:22px}
+  .tag .d{width:7px;height:7px;border-radius:50%;background:var(--accent);animation:pulse 2s var(--ease) infinite}
+  @keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(.7)}}
+  h1.name{font-family:var(--display);font-weight:800;font-size:clamp(52px,10vw,140px);line-height:.9;letter-spacing:-.035em}
+  h1.name .ln{display:block;overflow:hidden}
+  h1.name .ln i{display:inline-block;font-style:normal;transform:translateY(110%);transition:transform .9s var(--ease)}
+  body.ready h1.name .ln:nth-child(1) i{transform:none;transition-delay:.05s}
+  body.ready h1.name .ln:nth-child(2) i{transform:none;transition-delay:.16s}
+  .rotline{display:flex;flex-wrap:wrap;align-items:baseline;gap:12px;margin-top:20px;font-family:var(--display);font-weight:700;font-size:clamp(20px,3.4vw,40px);letter-spacing:-.02em;opacity:0;transform:translateY(16px);transition:.8s var(--ease) .3s}
+  body.ready .rotline{opacity:1;transform:none}
+  .rotline .fixed{color:var(--ink)}
+  .rotline .rot{color:var(--accent);transition:opacity .35s}
+  .lede{max-width:54ch;margin-top:24px;color:#33333a;font-size:clamp(16px,1.7vw,19px);opacity:0;transform:translateY(16px);transition:.8s var(--ease) .42s}
+  body.ready .lede{opacity:1;transform:none}
+  .cta-row{display:flex;flex-wrap:wrap;gap:14px;margin-top:30px;opacity:0;transform:translateY(16px);transition:.8s var(--ease) .52s}
+  body.ready .cta-row{opacity:1;transform:none}
+  .btn{display:inline-flex;align-items:center;gap:10px;font-family:var(--mono);font-size:12px;letter-spacing:.08em;text-transform:uppercase;padding:15px 24px;border-radius:100px;transition:transform .3s var(--ease),background .3s var(--ease),color .3s var(--ease)}
+  .btn.solid{background:var(--ink);color:var(--paper)}
+  .btn.solid:hover{background:var(--accent);transform:translateY(-2px)}
+  .btn.ghost{border:1.5px solid var(--ink)}
+  .btn.ghost:hover{background:var(--ink);color:var(--paper);transform:translateY(-2px)}
+
+  /* PHOTO */
+  .photo{position:relative;justify-self:center;perspective:900px;opacity:0;transform:translateY(20px) scale(.96);transition:.9s var(--ease) .3s}
+  body.ready .photo{opacity:1;transform:none}
+  .photo .frame{position:relative;width:min(320px,74vw);aspect-ratio:1;border-radius:20px;overflow:hidden;border:1px solid var(--line);background:var(--card);transition:transform .2s var(--ease);will-change:transform}
+  .photo .frame img{width:100%;height:100%;object-fit:cover;display:block}
+  .photo .frame .ph-fallback{width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-family:var(--display);font-weight:800;font-size:88px;letter-spacing:-.03em;color:var(--accent)}
+  .photo .frame::after{content:"";position:absolute;inset:0;box-shadow:inset 0 0 0 3px var(--accent);border-radius:20px;opacity:.9}
+  .photo .badge{position:absolute;bottom:-14px;left:-14px;background:var(--accent);color:#fff;font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;padding:9px 14px;border-radius:100px;z-index:2}
+  @media(max-width:860px){.photo{order:-1;margin-bottom:8px}}
+
+  /* METRICS */
+  .metrics{background:var(--ink);color:var(--paper);border-block:1px solid rgba(255,255,255,.12)}
+  .metrics .grid{display:grid;grid-template-columns:repeat(5,1fr);gap:20px;padding:clamp(30px,5vw,52px) 0}
+  @media(max-width:760px){.metrics .grid{grid-template-columns:repeat(2,1fr);gap:28px}}
+  .metric .n{font-family:var(--display);font-weight:800;font-size:clamp(34px,5vw,64px);line-height:1;letter-spacing:-.02em}
+  .metric .n .plus{color:var(--accent)}
+  .metric .l{font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.6);margin-top:10px}
+
+  /* MARQUEE */
+  .marq{background:var(--paper-2);overflow:hidden;border-bottom:1px solid var(--line)}
+  .marq .tk{display:flex;gap:34px;white-space:nowrap;width:max-content;padding:15px 0;animation:sl 28s linear infinite;font-family:var(--display);font-weight:700;font-size:clamp(16px,2.4vw,26px)}
+  .marq:hover .tk{animation-play-state:paused}
+  .marq .tk span{display:flex;align-items:center;gap:34px}
+  .marq .dot{color:var(--accent)}
+  @keyframes sl{to{transform:translateX(-50%)}}
+
+  section{padding:clamp(64px,10vw,120px) 0}
+  .head{display:flex;align-items:baseline;gap:16px;margin-bottom:14px}
+  .head .no{font-family:var(--mono);color:var(--accent);font-size:13px}
+  h2{font-family:var(--display);font-weight:800;font-size:clamp(34px,6vw,72px);line-height:.98;letter-spacing:-.03em}
+  .sub{color:var(--muted);max-width:56ch;margin-bottom:44px}
+
+  .caps{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+  @media(max-width:820px){.caps{grid-template-columns:1fr}}
+  .cap{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:26px 24px;transition:transform .4s var(--ease),box-shadow .4s var(--ease)}
+  .cap:hover{transform:translateY(-6px);box-shadow:0 30px 50px -34px rgba(19,19,24,.5)}
+  .cap .k{font-family:var(--mono);color:var(--accent);font-size:12px;letter-spacing:.1em;margin-bottom:14px}
+  .cap h3{font-family:var(--display);font-weight:700;font-size:22px;margin-bottom:10px;letter-spacing:-.01em}
+  .cap p{color:#44444c;font-size:15px}
+
+  .exp{border-top:1px solid var(--line)}
+  .row{display:grid;grid-template-columns:130px 1fr auto;gap:24px;align-items:baseline;padding:26px 8px;border-bottom:1px solid var(--line);position:relative;transition:padding-left .35s var(--ease)}
+  .row::before{content:"";position:absolute;left:-4px;top:0;bottom:0;width:3px;background:var(--accent);transform:scaleY(0);transform-origin:top;transition:transform .4s var(--ease)}
+  .row:hover{padding-left:22px}
+  .row:hover::before{transform:scaleY(1)}
+  .row .when{font-family:var(--mono);font-size:12px;color:var(--muted)}
+  .row .what h3{font-family:var(--display);font-weight:700;font-size:clamp(20px,2.6vw,28px);letter-spacing:-.01em}
+  .row .what .co{color:var(--accent);font-weight:600;font-size:15px;margin:2px 0 8px}
+  .row .what p{color:#44444c;font-size:15px;max-width:60ch}
+  .row .tager{font-family:var(--mono);font-size:11px;color:var(--muted);text-align:right;white-space:nowrap}
+  @media(max-width:760px){.row{grid-template-columns:1fr;gap:8px}.row .tager{text-align:left}}
+
+  .skills{display:grid;grid-template-columns:repeat(2,1fr);gap:30px 48px}
+  @media(max-width:760px){.skills{grid-template-columns:1fr}}
+  .skgroup .k{font-family:var(--mono);color:var(--accent);font-size:12px;letter-spacing:.1em;margin-bottom:16px;padding-bottom:8px;border-bottom:1px solid var(--line)}
+  .chips{display:flex;flex-wrap:wrap;gap:9px}
+  .chip{font-size:14px;font-weight:500;padding:8px 15px;border:1px solid var(--line);border-radius:100px;background:var(--card);transition:.25s var(--ease)}
+  .chip:hover{background:var(--ink);color:var(--paper);transform:translateY(-2px)}
+
+  .two{display:grid;grid-template-columns:1fr 1fr;gap:22px}
+  @media(max-width:820px){.two{grid-template-columns:1fr}}
+  .panel{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:32px 30px}
+  .panel .k{font-family:var(--mono);color:var(--accent);font-size:12px;letter-spacing:.1em;margin-bottom:20px}
+  .edu-item{padding:16px 0;border-bottom:1px solid var(--line)}
+  .edu-item:last-child{border-bottom:none}
+  .edu-item h3{font-family:var(--display);font-weight:700;font-size:19px}
+  .edu-item .m{font-family:var(--mono);font-size:11px;color:var(--muted);margin-top:4px}
+  .edu-item p{color:#44444c;font-size:14px;margin-top:4px}
+  .proj h3{font-family:var(--display);font-weight:800;font-size:clamp(26px,3.4vw,40px);letter-spacing:-.02em;margin-bottom:10px}
+  .proj p{color:#44444c;font-size:15px;margin-bottom:20px}
+  .proj .lk{font-family:var(--mono);font-size:12px;color:var(--accent);display:inline-flex;gap:8px;align-items:center}
+  .proj .lk:hover{text-decoration:underline}
+
+  footer{background:var(--ink);color:var(--paper);padding:clamp(70px,11vw,130px) 0 44px;overflow:hidden}
+  footer .big{font-family:var(--display);font-weight:800;font-size:clamp(40px,9vw,132px);line-height:.9;letter-spacing:-.035em}
+  footer .big .a{color:var(--accent)}
+  footer .frow{display:flex;flex-wrap:wrap;gap:14px;margin-top:36px}
+  footer .btn.solid{background:var(--accent);color:#fff}
+  footer .btn.solid:hover{background:var(--paper);color:var(--ink)}
+  footer .btn.ghost{border-color:rgba(255,255,255,.35);color:var(--paper)}
+  footer .btn.ghost:hover{background:var(--paper);color:var(--ink)}
+  footer .fine{margin-top:56px;padding-top:22px;border-top:1px solid rgba(255,255,255,.16);display:flex;justify-content:space-between;flex-wrap:wrap;gap:12px;font-family:var(--mono);font-size:11px;color:rgba(255,255,255,.55)}
+
+  .reveal{opacity:0;transform:translateY(28px);transition:opacity .8s var(--ease),transform .8s var(--ease)}
+  .reveal.in{opacity:1;transform:none}
+  .d1{transition-delay:.07s}.d2{transition-delay:.14s}.d3{transition-delay:.21s}
+
+  @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}.reveal,.rotline,.lede,.cta-row,.photo{opacity:1!important;transform:none!important}h1.name .ln i{transform:none!important}}
+</style>
 </head>
 <body>
+<div id="prog"></div>
 
-  <div class="grain"></div>
-
-  <div class="cursor-dot"></div>
-  <div class="cursor-ring"></div>
-
-  <div class="preloader">
-    <div class="preloader__count"><span id="preloader-num">0</span></div>
-    <div class="preloader__label">Loading experience</div>
+<header>
+  <div class="wrap bar">
+    <a href="#top" class="mark">JAHIR<b>.</b>HUSSAIN</a>
+    <nav>
+      <a href="#work">Work</a>
+      <a href="#exp">Experience</a>
+      <a href="#skills">Skills</a>
+      <a href="#contact">Contact</a>
+    </nav>
   </div>
+</header>
 
-  <header class="nav">
-    <a href="#top" class="nav__logo" data-cursor="link">JH<span>.</span></a>
-    <nav class="nav__links">
-      <a href="#work" data-cursor="link"><span class="nav__link-text">Work</span></a>
-      <a href="#about" data-cursor="link"><span class="nav__link-text">About</span></a>
-      <a href="#skills" data-cursor="link"><span class="nav__link-text">Skills</span></a>
-      <a href="#contact" data-cursor="link"><span class="nav__link-text">Contact</span></a>
-    </nav>
-    <a href="#contact" class="nav__cta magnetic" data-cursor="link"><span>Let's talk</span></a>
-    <button type="button" class="nav__burger" aria-label="Open menu" aria-expanded="false" aria-controls="mobile-menu" data-cursor="link">
-      <span></span>
-      <span></span>
-    </button>
-  </header>
-
-  <div class="mobile-menu" id="mobile-menu">
-    <nav class="mobile-menu__links">
-      <a href="#work" data-cursor="link">Work</a>
-      <a href="#about" data-cursor="link">About</a>
-      <a href="#skills" data-cursor="link">Skills</a>
-      <a href="#contact" data-cursor="link">Contact</a>
-    </nav>
-    <div class="mobile-menu__footer">
-      <a href="mailto:jahirhussain.s@solidpro-es.com" data-cursor="link">jahirhussain.s@solidpro-es.com</a>
-      <div class="mobile-menu__socials">
-        <a href="#" data-cursor="link">LinkedIn</a>
-        <a href="#" data-cursor="link">GitHub</a>
-        <a href="#" data-cursor="link">Twitter</a>
+<!-- HERO -->
+<section class="hero" id="top">
+  <svg class="pipe" preserveAspectRatio="none" viewBox="0 0 1200 600" aria-hidden="true">
+    <g fill="none" stroke="#D62246" stroke-width="1">
+      <path d="M-50 180 C 300 120, 500 240, 1250 170" stroke-dasharray="4 10" opacity=".35"/>
+      <path d="M-50 320 C 350 380, 620 260, 1250 340" stroke-dasharray="2 12" opacity=".25"/>
+      <path d="M-50 460 C 300 420, 700 520, 1250 440" stroke-dasharray="4 10" opacity=".3"/>
+    </g>
+    <g fill="#D62246">
+      <circle r="3"><animateMotion dur="7s" repeatCount="indefinite" path="M-50 180 C 300 120, 500 240, 1250 170"/></circle>
+      <circle r="2.5"><animateMotion dur="9s" repeatCount="indefinite" path="M-50 320 C 350 380, 620 260, 1250 340"/></circle>
+      <circle r="3"><animateMotion dur="8s" repeatCount="indefinite" path="M-50 460 C 300 420, 700 520, 1250 440"/></circle>
+    </g>
+  </svg>
+  <div class="wrap">
+    <div class="hgrid">
+      <div class="htext">
+        <div class="tag mono"><span class="d"></span> Growth &amp; Operations · Chennai, India</div>
+        <h1 class="name"><span class="ln"><i>Jahir</i></span><span class="ln"><i>Hussain</i></span></h1>
+        <div class="rotline">
+          <span class="fixed">I turn messy data into</span>
+          <span class="rot" id="rot">clean pipelines.</span>
+        </div>
+        <p class="lede">Growth &amp; Operations Specialist at Solidpro Group. I build, validate and enrich B2B prospect data, run CRM-driven pipelines in Zoho, and drive lead generation through outbound, email and WhatsApp — while keeping operations running smoothly behind the scenes.</p>
+        <div class="cta-row">
+          <a class="btn solid" href="https://www.linkedin.com/in/jahir-huss/" target="_blank" rel="noopener">Connect on LinkedIn →</a>
+          <a class="btn ghost" href="mailto:jahirussain333@gmail.com">Get in touch</a>
+        </div>
+      </div>
+      <div class="photo" id="photo">
+        <div class="frame"><div class="ph-fallback">JH</div></div>
+        <span class="badge">Open to work</span>
       </div>
     </div>
   </div>
+</section>
 
-  <main id="top">
+<!-- METRICS -->
+<div class="metrics" id="metrics">
+  <div class="wrap grid">
+    <div class="metric"><div class="n" data-to="1554">0</div><div class="l">Connections</div></div>
+    <div class="metric"><div class="n" data-to="1550">0</div><div class="l">Followers</div></div>
+    <div class="metric"><div class="n" data-to="4">0</div><div class="l">Roles</div></div>
+    <div class="metric"><div class="n" data-to="10" data-plus="1">0</div><div class="l">Tools in stack</div></div>
+    <div class="metric"><div class="n" data-to="30" data-plus="1">0</div><div class="l">Skills</div></div>
+  </div>
+</div>
 
-    <!-- HERO -->
-    <section class="hero">
-      <div class="hero__inner">
-        <h1 class="hero__title">
-          <span class="line"><span class="line-inner">Jahir</span></span>
-          <span class="line"><span class="line-inner">Hussain</span></span>
-        </h1>
-        <div class="hero__sub reveal-up">
-          <p>Creative Developer &amp; Digital Designer — building interfaces<br class="br-desktop"> that move, breathe and respond.</p>
-        </div>
-        <div class="hero__meta reveal-up">
-          <span>Based in — Remote</span>
-          <span>Available for work — 2026</span>
-        </div>
-      </div>
-      <a href="#work" class="scroll-cue" data-cursor="link">
-        <span class="scroll-cue__line"></span>
-        <span class="scroll-cue__text">Scroll</span>
-      </a>
-    </section>
+<!-- TOOL MARQUEE -->
+<div class="marq">
+  <div class="tk">
+    <span>Apollo.io <i class="dot">◇</i> Sales Navigator <i class="dot">◇</i> Zoho CRM <i class="dot">◇</i> Zoho Campaigns <i class="dot">◇</i> Saleshandy <i class="dot">◇</i> WordPress <i class="dot">◇</i> Google Analytics <i class="dot">◇</i> Google Ads <i class="dot">◇</i> SEO <i class="dot">◇</i> AI Tools <i class="dot">◇</i></span>
+    <span>Apollo.io <i class="dot">◇</i> Sales Navigator <i class="dot">◇</i> Zoho CRM <i class="dot">◇</i> Zoho Campaigns <i class="dot">◇</i> Saleshandy <i class="dot">◇</i> WordPress <i class="dot">◇</i> Google Analytics <i class="dot">◇</i> Google Ads <i class="dot">◇</i> SEO <i class="dot">◇</i> AI Tools <i class="dot">◇</i></span>
+  </div>
+</div>
 
-    <!-- MARQUEE -->
-    <div class="marquee">
-      <div class="marquee__track">
-        <span>Creative Developer</span>
-        <span>UI / UX Design</span>
-        <span>Frontend Engineering</span>
-        <span>Interaction Design</span>
-        <span>Creative Developer</span>
-        <span>UI / UX Design</span>
-        <span>Frontend Engineering</span>
-        <span>Interaction Design</span>
-      </div>
+<!-- WHAT I DO -->
+<section id="work" class="wrap">
+  <div class="head"><span class="no reveal">01</span><h2 class="reveal">What I do</h2></div>
+  <p class="sub reveal">Six things, one throughline — turning scattered inputs into clean, trackable outcomes.</p>
+  <div class="caps">
+    <div class="cap reveal"><div class="k">/ 01 Data</div><h3>B2B Data &amp; Prospecting</h3><p>Building, validating and enriching targeted company and contact lists with Apollo.io and LinkedIn Sales Navigator.</p></div>
+    <div class="cap reveal d1"><div class="k">/ 02 CRM</div><h3>Pipeline &amp; CRM Ops</h3><p>Managing the pipeline end to end in Zoho CRM — from lead capture through tracking to reporting.</p></div>
+    <div class="cap reveal d2"><div class="k">/ 03 Outreach</div><h3>Lead Generation</h3><p>Outbound campaigns across email (Zoho Campaigns, Saleshandy) and WhatsApp marketing.</p></div>
+    <div class="cap reveal"><div class="k">/ 04 Marketing</div><h3>Digital &amp; SEO</h3><p>WordPress, SEO, Google Search Console, Analytics and Ads to grow visibility and inbound.</p></div>
+    <div class="cap reveal d1"><div class="k">/ 05 Operations</div><h3>Ops &amp; Coordination</h3><p>Timesheet coordination org-wide, and SPOC for Kannan's Academy across sales, academic and HR ops.</p></div>
+    <div class="cap reveal d2"><div class="k">/ 06 AI</div><h3>AI-assisted Workflows</h3><p>Using AI tools to speed up research, data work and content without losing the human check.</p></div>
+  </div>
+</section>
+
+<!-- EXPERIENCE -->
+<section id="exp" class="wrap">
+  <div class="head"><span class="no reveal">02</span><h2 class="reveal">Experience</h2></div>
+  <div class="exp">
+    <div class="row reveal">
+      <div class="when">Oct 2025 — Now</div>
+      <div class="what"><h3>Growth &amp; Operations Specialist</h3><div class="co">Solidpro Group · Chennai</div><p>B2B data, lead generation and CRM-driven pipeline management. SPOC for Kannan's Academy; timesheet coordination across the organisation.</p></div>
+      <div class="tager">Full-time<br>11 mos</div>
     </div>
+    <div class="row reveal">
+      <div class="when">Mar — Sep 2025</div>
+      <div class="what"><h3>Business Operations Specialist</h3><div class="co">Kannan's Academy · Madurai</div><p>Sales, academic and HR operations, including Zoho People.</p></div>
+      <div class="tager">Full-time<br>7 mos</div>
+    </div>
+    <div class="row reveal">
+      <div class="when">Jan — Mar 2025</div>
+      <div class="what"><h3>Digital Marketing Executive</h3><div class="co">Kannan's Academy · Madurai</div><p>Social media, SEO, content creation and campaign performance analysis to grow the academy's online presence.</p></div>
+      <div class="tager">Full-time<br>3 mos</div>
+    </div>
+    <div class="row reveal">
+      <div class="when">Jun — Nov 2024</div>
+      <div class="what"><h3>Digital Analyst Intern</h3><div class="co">Ramaussys Technologies · Virudhunagar</div><p>SEO for MadrasTravels — keyword research, on-page optimisation, Google Analytics and Ads.</p></div>
+      <div class="tager">Internship<br>6 mos</div>
+    </div>
+  </div>
+</section>
 
-    <!-- ABOUT -->
-    <section class="about" id="about">
-      <div class="about__grid">
-        <div class="about__visual">
-          <div class="about__image reveal-clip">
-            <div class="placeholder-block placeholder-block--about">
-              <svg viewBox="0 0 400 500" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Abstract monogram artwork">
-                <defs>
-                  <linearGradient id="aboutGrad" x1="0" y1="0" x2="1" y2="1">
-                    <stop offset="0%" stop-color="#1c1c1f"/>
-                    <stop offset="55%" stop-color="#242820"/>
-                    <stop offset="100%" stop-color="#4c5c22"/>
-                  </linearGradient>
-                  <radialGradient id="aboutGlow" cx="50%" cy="88%" r="60%">
-                    <stop offset="0%" stop-color="#cdfd50" stop-opacity="0.35"/>
-                    <stop offset="100%" stop-color="#cdfd50" stop-opacity="0"/>
-                  </radialGradient>
-                </defs>
-                <rect width="400" height="500" fill="url(#aboutGrad)"/>
-                <rect width="400" height="500" fill="url(#aboutGlow)"/>
-                <g stroke="#f3f1ea" stroke-opacity="0.08" fill="none" stroke-width="1">
-                  <path d="M -20 420 Q 100 380 200 420 T 420 400"/>
-                  <path d="M -20 452 Q 100 412 200 452 T 420 432"/>
-                  <path d="M -20 484 Q 100 444 200 484 T 420 464"/>
-                </g>
-                <g class="spin-slow">
-                  <circle cx="200" cy="220" r="92" fill="none" stroke="#cdfd50" stroke-opacity="0.5" stroke-width="1"/>
-                  <circle cx="292" cy="220" r="3" fill="#cdfd50"/>
-                </g>
-                <text x="200" y="245" text-anchor="middle" font-family="Space Grotesk, sans-serif" font-size="86" font-weight="600" fill="#f3f1ea" fill-opacity="0.92">JH</text>
-              </svg>
-            </div>
-          </div>
-        </div>
-        <div class="about__content">
-          <span class="eyebrow reveal-up">— About</span>
-          <h2 class="about__heading split-lines">
-            I design and build products that feel considered, from first
-            scroll to final pixel.
-          </h2>
-          <p class="about__text reveal-up">
-            Over the last several years I've worked across branding, product
-            design and front-end engineering — helping studios and startups
-            turn ideas into interfaces people actually enjoy using. I care
-            about motion with intent, type with rhythm, and code that stays
-            out of the way.
-          </p>
-          <div class="about__stats">
-            <div class="stat reveal-up">
-              <span class="stat__num" data-count="5">0</span>
-              <span class="stat__label">Years experience</span>
-            </div>
-            <div class="stat reveal-up">
-              <span class="stat__num" data-count="40">0</span>
-              <span class="stat__label">Projects shipped</span>
-            </div>
-            <div class="stat reveal-up">
-              <span class="stat__num" data-count="18">0</span>
-              <span class="stat__label">Happy clients</span>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
+<!-- SKILLS -->
+<section id="skills" class="wrap">
+  <div class="head"><span class="no reveal">03</span><h2 class="reveal">Skills &amp; stack</h2></div>
+  <div class="skills">
+    <div class="skgroup reveal"><div class="k">/ Data &amp; Prospecting</div><div class="chips"><span class="chip">Apollo.io</span><span class="chip">LinkedIn Sales Navigator</span><span class="chip">Data Validation</span><span class="chip">Lead Generation</span><span class="chip">Keyword Research</span></div></div>
+    <div class="skgroup reveal d1"><div class="k">/ CRM &amp; Operations</div><div class="chips"><span class="chip">Zoho CRM</span><span class="chip">Zoho People</span><span class="chip">Zoho Campaigns</span><span class="chip">Pipeline Management</span><span class="chip">Business Operations</span></div></div>
+    <div class="skgroup reveal"><div class="k">/ Outreach</div><div class="chips"><span class="chip">Saleshandy</span><span class="chip">Email Marketing</span><span class="chip">WhatsApp Marketing</span><span class="chip">Outbound Campaigns</span></div></div>
+    <div class="skgroup reveal d1"><div class="k">/ Marketing &amp; SEO</div><div class="chips"><span class="chip">SEO (On &amp; Off-page)</span><span class="chip">SEM</span><span class="chip">Google Analytics</span><span class="chip">Google Ads</span><span class="chip">Search Console</span><span class="chip">WordPress</span><span class="chip">Facebook Marketing</span></div></div>
+  </div>
+</section>
 
-    <!-- WORK -->
-    <section class="work" id="work">
-      <span class="eyebrow reveal-up work__eyebrow">— Selected Work</span>
-      <div class="work__list">
+<!-- BACKGROUND -->
+<section class="wrap">
+  <div class="head"><span class="no reveal">04</span><h2 class="reveal">Background</h2></div>
+  <div class="two">
+    <div class="panel reveal">
+      <div class="k">/ Education &amp; Certification</div>
+      <div class="edu-item"><h3>Bachelor of Business Administration</h3><div class="m">VHNSN College · 2021 — 2024 · Grade A</div><p>Business Administration &amp; Management.</p></div>
+      <div class="edu-item"><h3>HSLC</h3><div class="m">KVS Higher Secondary School · 2020 — 2021</div></div>
+      <div class="edu-item"><h3>Digital Marketing — Certification</h3><div class="m">Getin Technologies · Issued Oct 2024</div></div>
+      <div class="edu-item"><h3>Languages</h3><div class="m">Tamil — Native · English — Working</div></div>
+    </div>
+    <div class="panel proj reveal d1">
+      <div class="k">/ Selected Project</div>
+      <h3>Leo Sports Store</h3>
+      <p>A WordPress / WooCommerce sports-equipment store — built and maintained end to end, from product catalogue and SEO to a custom kinetic homepage and site-wide theming.</p>
+      <a class="lk" href="https://jahir.rf.gd/" target="_blank" rel="noopener">Visit the store ↗</a>
+    </div>
+  </div>
+</section>
 
-        <a href="#" class="work__row reveal-up" data-cursor="view">
-          <div class="work__row-top">
-            <h3 class="work__title">Northline Studio</h3>
-            <span class="work__year">2025</span>
-          </div>
-          <div class="work__row-bottom">
-            <span class="work__tags">Brand · Web Design · Development</span>
-            <div class="work__thumb">
-              <div class="placeholder-block placeholder-block--01">
-                <svg viewBox="0 0 400 300" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Northline Studio project artwork">
-                  <defs>
-                    <linearGradient id="p1Grad" x1="0" y1="0" x2="1" y2="1">
-                      <stop offset="0%" stop-color="#151a16"/>
-                      <stop offset="100%" stop-color="#2f4a34"/>
-                    </linearGradient>
-                  </defs>
-                  <rect width="400" height="300" fill="url(#p1Grad)"/>
-                  <g fill="none" stroke="#cdfd50" stroke-width="1.5">
-                    <path d="M -20 240 C 100 180 140 260 260 190 S 420 120 460 140" stroke-opacity="0.55"/>
-                    <path d="M -20 200 C 100 140 140 220 260 150 S 420 80 460 100" stroke-opacity="0.3"/>
-                    <path d="M -20 280 C 100 220 140 300 260 230 S 420 160 460 180" stroke-opacity="0.2"/>
-                  </g>
-                  <circle cx="262" cy="190" r="4" fill="#cdfd50"/>
-                </svg>
-              </div>
-            </div>
-          </div>
-        </a>
+<!-- CONTACT -->
+<footer id="contact">
+  <div class="wrap">
+    <div class="big">Let's build<br>clean <span class="a">pipelines.</span></div>
+    <div class="frow">
+      <a class="btn solid" href="https://www.linkedin.com/in/jahir-huss/" target="_blank" rel="noopener">Connect on LinkedIn →</a>
+      <a class="btn ghost" href="mailto:jahirussain333@gmail.com">Email me</a>
+    </div>
+    <div class="fine">
+      <span>© 2026 Jahir Hussain · Chennai, Tamil Nadu, India</span>
+      <span>Growth &amp; Operations · B2B Data · CRM</span>
+    </div>
+  </div>
+</footer>
 
-        <a href="#" class="work__row reveal-up" data-cursor="view">
-          <div class="work__row-top">
-            <h3 class="work__title">Aperture Finance</h3>
-            <span class="work__year">2024</span>
-          </div>
-          <div class="work__row-bottom">
-            <span class="work__tags">Product Design · Motion</span>
-            <div class="work__thumb">
-              <div class="placeholder-block placeholder-block--02">
-                <svg viewBox="0 0 400 300" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Aperture Finance project artwork">
-                  <defs>
-                    <linearGradient id="p2Grad" x1="0" y1="0" x2="1" y2="1">
-                      <stop offset="0%" stop-color="#1a1414"/>
-                      <stop offset="100%" stop-color="#4a2c2c"/>
-                    </linearGradient>
-                  </defs>
-                  <rect width="400" height="300" fill="url(#p2Grad)"/>
-                  <g transform="translate(200,150)">
-                    <g class="spin-slow">
-                      <circle r="70" fill="none" stroke="#f3f1ea" stroke-opacity="0.5" stroke-width="1.2"/>
-                      <circle r="46" fill="none" stroke="#f3f1ea" stroke-opacity="0.5" stroke-width="1.2"/>
-                      <circle r="4" fill="#cdfd50"/>
-                      <path d="M0 -70 L20 -46 M60.6 -35 L40 -23 M60.6 35 L40 23 M0 70 L20 46 M-60.6 35 L-40 23 M-60.6 -35 L-40 -23" fill="none" stroke="#cdfd50" stroke-opacity="0.6" stroke-width="1.2"/>
-                    </g>
-                  </g>
-                </svg>
-              </div>
-            </div>
-          </div>
-        </a>
+<script>
+  document.body.classList.add('ready');
+  var reduce=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-        <a href="#" class="work__row reveal-up" data-cursor="view">
-          <div class="work__row-top">
-            <h3 class="work__title">Kindred Objects</h3>
-            <span class="work__year">2024</span>
-          </div>
-          <div class="work__row-bottom">
-            <span class="work__tags">E-commerce · Interaction Design</span>
-            <div class="work__thumb">
-              <div class="placeholder-block placeholder-block--03">
-                <svg viewBox="0 0 400 300" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Kindred Objects project artwork">
-                  <defs>
-                    <linearGradient id="p3Grad" x1="0" y1="0" x2="1" y2="1">
-                      <stop offset="0%" stop-color="#15161c"/>
-                      <stop offset="100%" stop-color="#2c2c46"/>
-                    </linearGradient>
-                  </defs>
-                  <rect width="400" height="300" fill="url(#p3Grad)"/>
-                  <circle cx="150" cy="170" r="55" fill="none" stroke="#f3f1ea" stroke-opacity="0.5" stroke-width="1.2"/>
-                  <rect x="215" y="110" width="90" height="90" fill="none" stroke="#cdfd50" stroke-opacity="0.6" stroke-width="1.2" transform="rotate(18 260 155)"/>
-                  <polygon points="120,90 150,40 180,90" fill="none" stroke="#f3f1ea" stroke-opacity="0.35" stroke-width="1.2"/>
-                </svg>
-              </div>
-            </div>
-          </div>
-        </a>
+  (function(){var bar=document.getElementById('prog');window.addEventListener('scroll',function(){var h=document.documentElement,m=h.scrollHeight-h.clientHeight;bar.style.width=(m>0?h.scrollTop/m*100:0)+'%';},{passive:true});})();
 
-        <a href="#" class="work__row reveal-up" data-cursor="view">
-          <div class="work__row-top">
-            <h3 class="work__title">Fieldwork Agency</h3>
-            <span class="work__year">2023</span>
-          </div>
-          <div class="work__row-bottom">
-            <span class="work__tags">Branding · Web Design</span>
-            <div class="work__thumb">
-              <div class="placeholder-block placeholder-block--04">
-                <svg viewBox="0 0 400 300" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Fieldwork Agency project artwork">
-                  <defs>
-                    <linearGradient id="p4Grad" x1="0" y1="0" x2="1" y2="1">
-                      <stop offset="0%" stop-color="#1a1a14"/>
-                      <stop offset="100%" stop-color="#4a4526"/>
-                    </linearGradient>
-                    <pattern id="p4Dots" width="26" height="26" patternUnits="userSpaceOnUse">
-                      <circle cx="2" cy="2" r="1.6" fill="#f3f1ea" fill-opacity="0.45"/>
-                    </pattern>
-                    <radialGradient id="p4Fade" cx="30%" cy="30%" r="75%">
-                      <stop offset="0%" stop-color="#cdfd50" stop-opacity="0.45"/>
-                      <stop offset="100%" stop-color="#cdfd50" stop-opacity="0"/>
-                    </radialGradient>
-                  </defs>
-                  <rect width="400" height="300" fill="url(#p4Grad)"/>
-                  <rect width="400" height="300" fill="url(#p4Dots)"/>
-                  <rect width="400" height="300" fill="url(#p4Fade)"/>
-                </svg>
-              </div>
-            </div>
-          </div>
-        </a>
+  /* rotating word */
+  (function(){var words=['clean pipelines.','qualified leads.','CRM that works.','growth.'],rot=document.getElementById('rot'),i=0;if(reduce)return;setInterval(function(){i=(i+1)%words.length;rot.style.opacity=0;setTimeout(function(){rot.textContent=words[i];rot.style.opacity=1;},350);},2600);})();
 
-      </div>
-    </section>
+  /* count-up metrics */
+  (function(){
+    var box=document.getElementById('metrics'),done=false;
+    function run(){if(done)return;done=true;
+      document.querySelectorAll('.metric .n').forEach(function(el){
+        var to=+el.getAttribute('data-to'),plus=el.getAttribute('data-plus'),t0=null,dur=1400;
+        function step(ts){if(!t0)t0=ts;var p=Math.min((ts-t0)/dur,1),e=1-Math.pow(1-p,3),v=Math.round(to*e);
+          el.innerHTML=v.toLocaleString()+(plus&&p===1?'<span class="plus">+</span>':(plus?'<span class="plus">+</span>':''));
+          if(p<1)requestAnimationFrame(step);}
+        if(reduce){el.innerHTML=to.toLocaleString()+(plus?'<span class="plus">+</span>':'');}else{requestAnimationFrame(step);}
+      });
+    }
+    if(!('IntersectionObserver'in window)||reduce){run();return;}
+    var io=new IntersectionObserver(function(en){en.forEach(function(e){if(e.isIntersecting)run();})},{threshold:.4});
+    io.observe(box);
+  })();
 
-    <!-- SKILLS -->
-    <section class="skills" id="skills">
-      <span class="eyebrow reveal-up">— Toolkit</span>
-      <div class="skills__grid">
-        <span class="skill reveal-up">JavaScript</span>
-        <span class="skill reveal-up">TypeScript</span>
-        <span class="skill reveal-up">React</span>
-        <span class="skill reveal-up">GSAP</span>
-        <span class="skill reveal-up">WebGL</span>
-        <span class="skill reveal-up">Figma</span>
-        <span class="skill reveal-up">Node.js</span>
-        <span class="skill reveal-up">Framer Motion</span>
-      </div>
-    </section>
+  /* photo tilt */
+  (function(){
+    var p=document.getElementById('photo');if(!p||reduce)return;var f=p.querySelector('.frame');
+    p.addEventListener('mousemove',function(e){var r=p.getBoundingClientRect(),x=(e.clientX-r.left)/r.width-.5,y=(e.clientY-r.top)/r.height-.5;f.style.transform='rotateY('+(x*10)+'deg) rotateX('+(-y*10)+'deg)';});
+    p.addEventListener('mouseleave',function(){f.style.transform='';});
+  })();
 
-    <!-- CONTACT / FOOTER -->
-    <footer class="contact" id="contact">
-      <span class="eyebrow reveal-up">— Get in touch</span>
-      <h2 class="contact__heading split-lines">Let's build something worth remembering.</h2>
-      <a href="mailto:jahirhussain.s@solidpro-es.com" class="contact__email magnetic" data-cursor="link">
-        <span>jahirhussain.s@solidpro-es.com</span>
-      </a>
-      <div class="contact__bottom">
-        <div class="socials">
-          <a href="#" data-cursor="link">LinkedIn</a>
-          <a href="#" data-cursor="link">GitHub</a>
-          <a href="#" data-cursor="link">Twitter</a>
-        </div>
-        <span class="copyright">&copy; 2026 Jahir Hussain. All rights reserved.</span>
-      </div>
-    </footer>
-
-  </main>
-
-  <script src="assets/vendor/gsap.min.js"></script>
-  <script src="assets/vendor/ScrollTrigger.min.js"></script>
-  <script src="assets/vendor/lenis.min.js"></script>
-  <script src="assets/js/main.js"></script>
+  /* scroll reveal */
+  (function(){
+    var els=document.querySelectorAll('.reveal');
+    if(!('IntersectionObserver'in window)){els.forEach(function(e){e.classList.add('in')});return;}
+    var io=new IntersectionObserver(function(en){en.forEach(function(e){if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target);}})},{threshold:.14,rootMargin:'0px 0px -50px 0px'});
+    els.forEach(function(e){io.observe(e)});
+  })();
+</script>
 </body>
 </html>
