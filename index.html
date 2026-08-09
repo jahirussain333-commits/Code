@@ -429,6 +429,12 @@ h2{font-family:var(--display);font-weight:900;font-stretch:110%;
   .js .reveal,.hs,.port{opacity:1!important;transform:none!important}
   h1.nm .ln > span{transform:none!important}
   .loader{display:none}
+  /* the marquee can't scroll, so present it as a static wrapped list
+     instead of a strip clipped mid-word */
+  .mq{padding:16px 0}
+  .mq__t{width:auto;white-space:normal}
+  .mq__g{flex-wrap:wrap;row-gap:10px;padding-right:0;justify-content:center}
+  .mq__g:nth-child(2){display:none}
 }
 </style>
 </head>
@@ -774,10 +780,55 @@ h2{font-family:var(--display);font-weight:900;font-stretch:110%;
 var RM = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 var COARSE = window.matchMedia('(hover: none), (pointer: coarse)').matches;
 
-/* ------------------------------------------------------------
-   TICKER — built in JS so the duplicate half always matches
-   ------------------------------------------------------------ */
-(function(){
+/* Every feature below is initialised inside safe(). One module throwing must
+   never stop the ones after it from running. */
+function safe(name, fn){
+  try { fn(); }
+  catch(err){ if(window.console && console.error) console.error('[' + name + ']', err); }
+}
+
+/* --- scroll plumbing -------------------------------------------------------
+   Listen on window AND in the capture phase on document, so scrolling still
+   registers if the page sits inside a scrolling container rather than the
+   document itself. Every callback also runs once immediately, which covers
+   content that is already on screen at load. */
+var scrollFns = [];
+function onScroll(fn){ scrollFns.push(fn); try{ fn(); }catch(e){} }
+function fireScroll(){
+  for(var i = 0; i < scrollFns.length; i++){
+    try { scrollFns[i](); } catch(e){}
+  }
+}
+window.addEventListener('scroll', fireScroll, {passive:true});
+document.addEventListener('scroll', fireScroll, {passive:true, capture:true});
+window.addEventListener('resize', fireScroll);
+
+function inView(el, frac){
+  var r = el.getBoundingClientRect();
+  var vh = window.innerHeight || document.documentElement.clientHeight;
+  if(r.height === 0 && r.width === 0) return false;
+  var vis = Math.min(r.bottom, vh) - Math.max(r.top, 0);
+  return vis > 0 && vis / Math.min(r.height || 1, vh) >= (frac || .2);
+}
+
+/* Fire fn once, the first time el is visible. IntersectionObserver when it
+   exists, scroll/visibility polling as the backstop. */
+function whenVisible(el, frac, fn){
+  var done = false;
+  function go(){ if(done) return; done = true; fn(); }
+  if('IntersectionObserver' in window){
+    var io = new IntersectionObserver(function(en){
+      for(var i = 0; i < en.length; i++){
+        if(en[i].isIntersecting){ io.disconnect(); go(); return; }
+      }
+    }, {threshold: Math.min(frac || .2, .9)});
+    io.observe(el);
+  }
+  onScroll(function(){ if(!done && inView(el, frac)) go(); });
+}
+
+/* --- ticker ---------------------------------------------------------------- */
+safe('ticker', function(){
   var tools = ['Apollo.io','Sales Navigator','Zoho CRM','Zoho Campaigns','Saleshandy',
                'WordPress','Google Analytics','Google Ads','SEO','AI Tools'];
   var track = document.getElementById('tickTrack');
@@ -785,69 +836,37 @@ var COARSE = window.matchMedia('(hover: none), (pointer: coarse)').matches;
   function group(){
     var g = document.createElement('div');
     g.className = 'mq__g';
-    tools.forEach(function(t){
-      var s = document.createElement('span'); s.textContent = t;
-      var i = document.createElement('i'); i.textContent = '◆';
-      g.appendChild(s); g.appendChild(i);
-    });
+    for(var i = 0; i < tools.length; i++){
+      var s = document.createElement('span'); s.textContent = tools[i];
+      var d = document.createElement('i');   d.textContent = '◆';
+      g.appendChild(s); g.appendChild(d);
+    }
     return g;
   }
   track.appendChild(group());
-  track.appendChild(group());   // second half makes the -50% loop seamless
-})();
+  track.appendChild(group());   // duplicate half makes the -50% loop seamless
+});
 
-/* ------------------------------------------------------------
-   LOADER  →  hero entrance
-   ------------------------------------------------------------ */
-function start(){
-  document.body.classList.add('ready');
-  field.kick();
-  scramble();
-}
+/* --- hero canvas: noise resolving into pipelines ---------------------------
+   Declared BEFORE the loader, because the reduced-motion path calls start()
+   synchronously and would otherwise reach for a field that does not exist yet. */
+var field = null;
 
-(function(){
-  var el = document.getElementById('loader');
-  if(RM || !el){ if(el) el.style.display='none'; start(); return; }
-  var num = document.getElementById('ldNum'),
-      fill = document.getElementById('ldFill'),
-      stat = document.getElementById('ldStat'),
-      words = ['Reading records','Validating','Enriching','Building pipeline'],
-      p = 0, t0 = null, DUR = 1500;
-
-  function step(ts){
-    if(!t0) t0 = ts;
-    p = Math.min((ts - t0) / DUR, 1);
-    var e = 1 - Math.pow(1 - p, 2);
-    num.textContent = String(Math.round(e * 100)).padStart(3,'0');
-    fill.style.width = (e * 100) + '%';
-    stat.textContent = words[Math.min(Math.floor(e * words.length), words.length - 1)];
-    if(p < 1) requestAnimationFrame(step);
-    else setTimeout(function(){ el.classList.add('done'); start(); }, 170);
-  }
-  requestAnimationFrame(step);
-})();
-
-/* ------------------------------------------------------------
-   HERO CANVAS — noise resolving into pipelines
-   Particles drift right. Their vertical position is a blend of a
-   random "chaos" position and an ordered lane; `order` rises after
-   load, so the field literally cleans itself up.
-   ------------------------------------------------------------ */
-var field = (function(){
+safe('field-init', function(){
   var cv = document.getElementById('field');
-  if(!cv) return { kick:function(){} };
-  var ctx = cv.getContext('2d'),
-      W = 0, H = 0, DPR = 1,
-      parts = [], LANES = 7, lanes = [],
+  if(!cv || !cv.getContext) return;
+  var ctx = cv.getContext('2d');
+  if(!ctx) return;
+
+  var W = 0, H = 0, DPR = 1, parts = [], LANES = 7, lanes = [],
       order = 0, tStart = 0, ORDER_MS = 2000,
-      mx = -9999, my = -9999,
-      raf = null;
+      mx = -9999, my = -9999, raf = null;
 
   function size(){
     var r = cv.getBoundingClientRect();
     DPR = Math.min(window.devicePixelRatio || 1, 2);
     W = r.width; H = r.height;
-    cv.width = Math.max(1, Math.floor(W * DPR));
+    cv.width  = Math.max(1, Math.floor(W * DPR));
     cv.height = Math.max(1, Math.floor(H * DPR));
     ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
     lanes = [];
@@ -861,9 +880,9 @@ var field = (function(){
     for(var i = 0; i < n; i++){
       parts.push({
         x: Math.random() * W,
-        py: Math.random() * H,               // chaos position
-        lane: (i % LANES),
-        jit: (Math.random() - .5) * 7,       // keeps lanes from looking ruled
+        py: Math.random() * H,
+        lane: i % LANES,
+        jit: (Math.random() - .5) * 7,
         sp: .28 + Math.random() * .95,
         r: Math.random() < .13 ? 1.9 : 1.05,
         seed: Math.random() * 6.28
@@ -871,29 +890,18 @@ var field = (function(){
     }
   }
 
-  function yOf(p, t){
-    var chaos = p.py + Math.sin(t * .0006 + p.seed) * 26;
-    var clean = lanes[p.lane] + p.jit;
-    return chaos + (clean - chaos) * order;
-  }
-
   function frame(t){
     ctx.clearRect(0, 0, W, H);
-    // time-based so it settles identically on 60Hz and 120Hz displays
     if(tStart){
       var k = Math.max(0, Math.min((t - tStart) / ORDER_MS, 1));
-      order = 1 - Math.pow(1 - k, 3);
+      order = 1 - Math.pow(1 - k, 3);     // time-based: same on 60Hz and 120Hz
     }
 
-    // lane guides fade in with order
     if(order > .04){
       ctx.strokeStyle = 'rgba(237,231,219,' + (order * .05).toFixed(3) + ')';
       ctx.lineWidth = 1;
       for(var l = 0; l < LANES; l++){
-        ctx.beginPath();
-        ctx.moveTo(0, lanes[l] + .5);
-        ctx.lineTo(W, lanes[l] + .5);
-        ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(0, lanes[l] + .5); ctx.lineTo(W, lanes[l] + .5); ctx.stroke();
       }
     }
 
@@ -902,35 +910,31 @@ var field = (function(){
       p.x += p.sp * (.35 + order * 1.5);
       if(p.x > W + 20){ p.x = -20; p.py = Math.random() * H; }
 
-      var y = yOf(p, t), x = p.x;
+      var chaos = p.py + Math.sin(t * .0006 + p.seed) * 26;
+      var clean = lanes[p.lane] + p.jit;
+      var y = chaos + (clean - chaos) * order;
+      var x = p.x;
 
-      // pointer pushes particles aside
-      var dx = x - mx, dy = y - my, d2 = dx*dx + dy*dy;
+      var ddx = x - mx, ddy = y - my, d2 = ddx * ddx + ddy * ddy;
       if(d2 < 15000){
         var f = (1 - d2 / 15000) * 26, d = Math.sqrt(d2) || 1;
-        x += dx / d * f; y += dy / d * f;
+        x += ddx / d * f; y += ddy / d * f;
       }
 
-      // teal when raw, ember once it has found its lane
       var a = .16 + order * .5;
-      if(order > .45){
+      if(order > .45){                    // ember once it has found its lane
         ctx.strokeStyle = 'rgba(255,122,69,' + (a * .82).toFixed(3) + ')';
         ctx.lineWidth = p.r;
-        ctx.beginPath();
-        ctx.moveTo(x - 7 - order * 15, y);
-        ctx.lineTo(x, y);
-        ctx.stroke();
-      } else {
+        ctx.beginPath(); ctx.moveTo(x - 7 - order * 15, y); ctx.lineTo(x, y); ctx.stroke();
+      } else {                            // teal while still raw
         ctx.fillStyle = 'rgba(79,211,196,' + a.toFixed(3) + ')';
-        ctx.beginPath();
-        ctx.arc(x, y, p.r, 0, 6.2832);
-        ctx.fill();
+        ctx.beginPath(); ctx.arc(x, y, p.r, 0, 6.2832); ctx.fill();
       }
     }
     raf = requestAnimationFrame(frame);
   }
 
-  function still(){                       // reduced-motion: one tidy frame
+  function still(){                       // reduced motion: one resolved frame
     order = 1;
     ctx.clearRect(0, 0, W, H);
     ctx.strokeStyle = 'rgba(237,231,219,.05)';
@@ -958,183 +962,211 @@ var field = (function(){
     }, {passive:true});
   }
 
-  // pause when the hero is off-screen — no wasted battery
-  if('IntersectionObserver' in window && !RM){
+  if('IntersectionObserver' in window && !RM){   // stop drawing once off-screen
     new IntersectionObserver(function(en){
-      en.forEach(function(e){
-        if(e.isIntersecting){ if(!raf) raf = requestAnimationFrame(frame); }
+      for(var i = 0; i < en.length; i++){
+        if(en[i].isIntersecting){ if(!raf) raf = requestAnimationFrame(frame); }
         else if(raf){ cancelAnimationFrame(raf); raf = null; }
-      });
+      }
     }, {threshold:0}).observe(cv);
   }
 
-  return {
+  field = {
     kick: function(){
       if(RM){ still(); return; }
       if(!raf) raf = requestAnimationFrame(frame);
-      tStart = performance.now() + 200;
+      tStart = (window.performance && performance.now ? performance.now() : Date.now()) + 200;
     }
   };
-})();
+});
 
-/* ------------------------------------------------------------
-   SCRAMBLE — the claim line decodes into place
-   ------------------------------------------------------------ */
+/* --- claim line decodes into place ----------------------------------------- */
 function scramble(){
   var el = document.getElementById('scr');
   if(!el || RM) return;
-  var final = el.textContent, chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ#%$&/0123456789', i = 0;
+  var final = el.textContent,
+      chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ#%$&/0123456789',
+      i = 0;
   var id = setInterval(function(){
     i += 1;
     var out = '';
     for(var k = 0; k < final.length; k++){
-      if(final[k] === ' '){ out += ' '; continue; }
-      out += k < i ? final[k] : chars[(Math.random() * chars.length) | 0];
+      out += final.charAt(k) === ' ' ? ' '
+           : (k < i ? final.charAt(k) : chars.charAt((Math.random() * chars.length) | 0));
     }
     el.textContent = out;
-    if(i >= final.length) clearInterval(id);
+    if(i >= final.length){ clearInterval(id); el.textContent = final; }
   }, 34);
 }
 
-/* ------------------------------------------------------------
-   CURSOR
-   ------------------------------------------------------------ */
-if(!COARSE){
-  var dot = document.querySelector('.cur'), ring = document.querySelector('.cur-r'),
-      dx = 0, dy = 0, rx = 0, ry = 0, tx = 0, ty = 0;
+function start(){
+  document.body.classList.add('ready');
+  if(field) field.kick();
+  safe('scramble', scramble);
+}
+
+/* --- loader ---------------------------------------------------------------- */
+safe('loader', function(){
+  var el = document.getElementById('loader');
+  if(RM || !el){ if(el) el.style.display = 'none'; start(); return; }
+  var num = document.getElementById('ldNum'),
+      fill = document.getElementById('ldFill'),
+      stat = document.getElementById('ldStat'),
+      words = ['Reading records','Validating','Enriching','Building pipeline'],
+      t0 = null, DUR = 1500, finished = false;
+
+  function done(){
+    if(finished) return;
+    finished = true;
+    el.classList.add('done');
+    start();
+  }
+  // hard backstop: the page must never be left behind the loader
+  setTimeout(done, 4000);
+
+  requestAnimationFrame(function step(ts){
+    if(!t0) t0 = ts;
+    var p = Math.min((ts - t0) / DUR, 1), e = 1 - Math.pow(1 - p, 2);
+    if(num)  num.textContent = ('00' + Math.round(e * 100)).slice(-3);
+    if(fill) fill.style.width = (e * 100) + '%';
+    if(stat) stat.textContent = words[Math.min(Math.floor(e * words.length), words.length - 1)];
+    if(p < 1) requestAnimationFrame(step);
+    else setTimeout(done, 170);
+  });
+});
+
+/* --- cursor ---------------------------------------------------------------- */
+safe('cursor', function(){
+  if(COARSE) return;
+  var dot = document.querySelector('.cur'), ring = document.querySelector('.cur-r');
+  if(!dot || !ring) return;
+  var dx = 0, dy = 0, rx = 0, ry = 0, tx = 0, ty = 0;
   window.addEventListener('mousemove', function(e){ tx = e.clientX; ty = e.clientY; }, {passive:true});
   (function loop(){
     dx += (tx - dx) * .58; dy += (ty - dy) * .58;
-    rx += (tx - rx) * .16;  ry += (ty - ry) * .16;
+    rx += (tx - rx) * .16; ry += (ty - ry) * .16;
     dot.style.transform  = 'translate(' + dx + 'px,' + dy + 'px) translate(-50%,-50%)';
     ring.style.transform = 'translate(' + rx + 'px,' + ry + 'px) translate(-50%,-50%)';
     requestAnimationFrame(loop);
   })();
-  document.querySelectorAll('[data-c]').forEach(function(el){
-    el.addEventListener('mouseenter', function(){ ring.classList.add('on'); });
-    el.addEventListener('mouseleave', function(){ ring.classList.remove('on'); });
-  });
-}
-
-/* ------------------------------------------------------------
-   MAGNETIC BUTTONS
-   ------------------------------------------------------------ */
-if(!COARSE && !RM){
-  document.querySelectorAll('.mag').forEach(function(el){
-    var raf = null, cx = 0, cy = 0;
-    el.addEventListener('mousemove', function(e){
-      var r = el.getBoundingClientRect();
-      cx = (e.clientX - r.left - r.width / 2) * .32;
-      cy = (e.clientY - r.top - r.height / 2) * .32;
-      if(!raf) raf = requestAnimationFrame(function(){
-        el.style.transform = 'translate(' + cx + 'px,' + cy + 'px)'; raf = null;
-      });
-    });
-    el.addEventListener('mouseleave', function(){
-      el.style.transition = 'transform .5s cubic-bezier(.22,1,.36,1)';
-      el.style.transform = '';
-      setTimeout(function(){ el.style.transition = ''; }, 520);
-    });
-  });
-}
-
-/* ------------------------------------------------------------
-   REVEALS
-   ------------------------------------------------------------ */
-(function(){
-  var els = document.querySelectorAll('.reveal');
-  if(!('IntersectionObserver' in window) || RM){
-    els.forEach(function(e){ e.classList.add('in'); });
-    return;
+  var hot = document.querySelectorAll('[data-c]');
+  for(var i = 0; i < hot.length; i++){
+    hot[i].addEventListener('mouseenter', function(){ ring.classList.add('on'); });
+    hot[i].addEventListener('mouseleave', function(){ ring.classList.remove('on'); });
   }
-  var io = new IntersectionObserver(function(en){
-    en.forEach(function(e){
-      if(!e.isIntersecting) return;
-      var sibs = Array.prototype.slice.call(e.target.parentNode.children).filter(function(c){
-        return c.classList.contains('reveal');
-      });
-      var idx = Math.max(0, sibs.indexOf(e.target));
-      e.target.style.transitionDelay = Math.min(idx, 6) * 65 + 'ms';
-      e.target.classList.add('in');
-      io.unobserve(e.target);
-    });
-  }, {threshold:.12, rootMargin:'0px 0px -60px 0px'});
-  els.forEach(function(e){ io.observe(e); });
-})();
+});
 
-/* ------------------------------------------------------------
-   COUNTERS
-   ------------------------------------------------------------ */
-(function(){
-  var box = document.getElementById('mets');
-  if(!box) return;
-  function run(){
-    document.querySelectorAll('.met .v').forEach(function(el){
-      var to = +el.getAttribute('data-to'),
-          plus = el.getAttribute('data-plus') ? '<em>+</em>' : '';
-      if(RM){ el.innerHTML = to.toLocaleString() + plus; return; }
-      var t0 = null, DUR = 1500;
-      requestAnimationFrame(function step(ts){
-        if(!t0) t0 = ts;
-        var p = Math.min((ts - t0) / DUR, 1), e = 1 - Math.pow(1 - p, 3);
-        el.innerHTML = Math.round(to * e).toLocaleString() + plus;
-        if(p < 1) requestAnimationFrame(step);
+/* --- magnetic buttons ------------------------------------------------------ */
+safe('magnetic', function(){
+  if(COARSE || RM) return;
+  var els = document.querySelectorAll('.mag');
+  for(var i = 0; i < els.length; i++){
+    (function(el){
+      var raf = null, cx = 0, cy = 0;
+      el.addEventListener('mousemove', function(e){
+        var r = el.getBoundingClientRect();
+        cx = (e.clientX - r.left - r.width / 2) * .32;
+        cy = (e.clientY - r.top - r.height / 2) * .32;
+        if(!raf) raf = requestAnimationFrame(function(){
+          el.style.transform = 'translate(' + cx + 'px,' + cy + 'px)'; raf = null;
+        });
       });
-    });
+      el.addEventListener('mouseleave', function(){
+        el.style.transition = 'transform .5s cubic-bezier(.22,1,.36,1)';
+        el.style.transform = '';
+        setTimeout(function(){ el.style.transition = ''; }, 520);
+      });
+    })(els[i]);
   }
-  if(!('IntersectionObserver' in window)){ run(); return; }
-  var io = new IntersectionObserver(function(en){
-    en.forEach(function(e){ if(e.isIntersecting){ run(); io.disconnect(); } });
-  }, {threshold:.35});
-  io.observe(box);
-})();
+});
 
-/* ------------------------------------------------------------
-   EXPERIENCE — rail fill, node lighting, duration bars
-   ------------------------------------------------------------ */
-(function(){
-  var pipe = document.getElementById('pipe'), fill = document.getElementById('pipeFill');
-  if(!pipe || !fill) return;
-  var jobs = Array.prototype.slice.call(pipe.querySelectorAll('.job'));
+/* --- reveals --------------------------------------------------------------- */
+safe('reveals', function(){
+  var els = Array.prototype.slice.call(document.querySelectorAll('.reveal'));
+  if(!els.length) return;
+  if(RM){ els.forEach(function(e){ e.classList.add('in'); }); return; }
 
-  var MAX = 11;   // longest tenure, so bars are proportional to real months
+  function show(el){
+    if(el.classList.contains('in')) return;
+    var sibs = Array.prototype.slice.call(el.parentNode.children).filter(function(c){
+      return c.classList.contains('reveal');
+    });
+    el.style.transitionDelay = Math.min(Math.max(sibs.indexOf(el), 0), 6) * 65 + 'ms';
+    el.classList.add('in');
+  }
+
   if('IntersectionObserver' in window){
     var io = new IntersectionObserver(function(en){
       en.forEach(function(e){
-        if(!e.isIntersecting) return;
-        var bar = e.target.querySelector('.dur__v');
-        if(bar) bar.style.width = (+bar.getAttribute('data-m') / MAX * 100) + '%';
-        io.unobserve(e.target);
+        if(e.isIntersecting){ show(e.target); io.unobserve(e.target); }
       });
-    }, {threshold:.3});
-    jobs.forEach(function(j){ io.observe(j); });
-  } else {
-    jobs.forEach(function(j){
-      var bar = j.querySelector('.dur__v');
-      if(bar) bar.style.width = (+bar.getAttribute('data-m') / MAX * 100) + '%';
-    });
+    }, {threshold:.12, rootMargin:'0px 0px -60px 0px'});
+    els.forEach(function(e){ io.observe(e); });
   }
+  onScroll(function(){
+    for(var i = 0; i < els.length; i++){
+      if(!els[i].classList.contains('in') && inView(els[i], .12)) show(els[i]);
+    }
+  });
+});
 
-  function onScroll(){
-    var r = pipe.getBoundingClientRect(), vh = window.innerHeight;
-    var p = (vh * .62 - r.top) / r.height;
-    p = Math.max(0, Math.min(1, p));
-    fill.style.height = (p * 100) + '%';
+/* --- metric counters ------------------------------------------------------- */
+safe('counters', function(){
+  var box = document.getElementById('mets');
+  if(!box) return;
+  var vals = document.querySelectorAll('.met .v');
+
+  whenVisible(box, .3, function(){
+    for(var i = 0; i < vals.length; i++){
+      (function(el){
+        var to = +el.getAttribute('data-to') || 0,
+            plus = el.getAttribute('data-plus') ? '<em>+</em>' : '';
+        if(RM){ el.innerHTML = to.toLocaleString() + plus; return; }
+        var t0 = null, DUR = 1500;
+        requestAnimationFrame(function step(ts){
+          if(!t0) t0 = ts;
+          var p = Math.min((ts - t0) / DUR, 1), e = 1 - Math.pow(1 - p, 3);
+          el.innerHTML = Math.round(to * e).toLocaleString() + plus;
+          if(p < 1) requestAnimationFrame(step);
+          else el.innerHTML = to.toLocaleString() + plus;
+        });
+      })(vals[i]);
+    }
+  });
+});
+
+/* --- experience: rail fill, node lighting, duration bars ------------------- */
+safe('experience', function(){
+  var pipe = document.getElementById('pipe'), fill = document.getElementById('pipeFill');
+  if(!pipe) return;
+  var jobs = Array.prototype.slice.call(pipe.querySelectorAll('.job'));
+  var MAX = 11;   // longest tenure — keeps every bar proportional to real months
+
+  jobs.forEach(function(j){
+    var bar = j.querySelector('.dur__v');
+    if(!bar) return;
+    whenVisible(j, .2, function(){
+      bar.style.width = (+bar.getAttribute('data-m') / MAX * 100) + '%';
+    });
+  });
+
+  onScroll(function(){
+    var r = pipe.getBoundingClientRect();
+    var vh = window.innerHeight || document.documentElement.clientHeight;
+    if(!r.height) return;
+    var p = Math.max(0, Math.min((vh * .62 - r.top) / r.height, 1));
+    if(fill) fill.style.height = (p * 100) + '%';
     var mark = r.top + r.height * p;
-    jobs.forEach(function(j){
-      var jr = j.getBoundingClientRect();
-      j.classList.toggle('lit', mark >= jr.top + 8);
-    });
-  }
-  onScroll();
-  window.addEventListener('scroll', onScroll, {passive:true});
-  window.addEventListener('resize', onScroll);
-})();
+    for(var i = 0; i < jobs.length; i++){
+      var jr = jobs[i].getBoundingClientRect();
+      if(mark >= jr.top + 8) jobs[i].classList.add('lit');
+      else jobs[i].classList.remove('lit');
+    }
+  });
+});
 
-/* ------------------------------------------------------------
-   SKILLS FILTER — FLIP so chips glide to their new positions
-   ------------------------------------------------------------ */
-(function(){
+/* --- skills filter (FLIP) --------------------------------------------------- */
+safe('skills', function(){
   var grid = document.getElementById('skills-grid'),
       bar = document.getElementById('filt'),
       count = document.getElementById('skcount');
@@ -1142,13 +1174,12 @@ if(!COARSE && !RM){
   var chips = Array.prototype.slice.call(grid.querySelectorAll('.sk'));
 
   function label(n){
-    count.textContent = n + (n === 1 ? ' skill' : ' skills') + ' shown / ' + chips.length + ' total';
+    if(count) count.textContent = n + (n === 1 ? ' skill' : ' skills') + ' shown / ' + chips.length + ' total';
   }
   label(chips.length);
 
   function apply(f){
-    // FIRST — where is everything now
-    var first = chips.map(function(c){ return c.getBoundingClientRect(); });
+    var first = chips.map(function(c){ return c.getBoundingClientRect(); });   // FIRST
 
     var shown = 0;
     chips.forEach(function(c){
@@ -1157,25 +1188,20 @@ if(!COARSE && !RM){
       if(match) shown++;
     });
     label(shown);
-
     if(RM) return;
 
-    // LAST — and invert, then play
-    chips.forEach(function(c, i){
+    chips.forEach(function(c, i){                                             // LAST + INVERT + PLAY
       if(c.classList.contains('gone')) return;
       var last = c.getBoundingClientRect(), f0 = first[i];
-      var ddx = f0.left - last.left, ddy = f0.top - last.top;
       var appearing = (f0.width === 0 && f0.height === 0);
+      var ddx = f0.left - last.left, ddy = f0.top - last.top;
       c.style.transition = 'none';
-      if(appearing){
-        c.style.opacity = '0';
-        c.style.transform = 'scale(.9)';
-      } else if(ddx || ddy){
-        c.style.transform = 'translate(' + ddx + 'px,' + ddy + 'px)';
-      }
+      if(appearing){ c.style.opacity = '0'; c.style.transform = 'scale(.9)'; }
+      else if(ddx || ddy){ c.style.transform = 'translate(' + ddx + 'px,' + ddy + 'px)'; }
       requestAnimationFrame(function(){
-        c.style.transition = 'opacity .34s cubic-bezier(.22,1,.36,1) ' + Math.min(i, 12) * 12 + 'ms,' +
-                             'transform .42s cubic-bezier(.22,1,.36,1) ' + Math.min(i, 12) * 12 + 'ms';
+        var d = Math.min(i, 12) * 12;
+        c.style.transition = 'opacity .34s cubic-bezier(.22,1,.36,1) ' + d + 'ms,' +
+                             'transform .42s cubic-bezier(.22,1,.36,1) ' + d + 'ms';
         c.style.opacity = '1';
         c.style.transform = '';
       });
@@ -1183,61 +1209,51 @@ if(!COARSE && !RM){
   }
 
   bar.addEventListener('click', function(e){
-    var b = e.target.closest('button');
+    var b = e.target && e.target.closest ? e.target.closest('button') : null;
     if(!b) return;
-    bar.querySelectorAll('button').forEach(function(x){ x.classList.remove('on'); });
+    var all = bar.querySelectorAll('button');
+    for(var i = 0; i < all.length; i++) all[i].classList.remove('on');
     b.classList.add('on');
     apply(b.getAttribute('data-f'));
   });
-})();
+});
 
-/* ------------------------------------------------------------
-   PORTRAIT TILT
-   ------------------------------------------------------------ */
-if(!COARSE && !RM){
+/* --- portrait tilt ---------------------------------------------------------- */
+safe('portrait', function(){
+  if(COARSE || RM) return;
   var port = document.getElementById('port'), pf = document.getElementById('portF');
-  if(port && pf){
-    port.addEventListener('mousemove', function(e){
-      var r = port.getBoundingClientRect();
-      var x = (e.clientX - r.left) / r.width - .5, y = (e.clientY - r.top) / r.height - .5;
-      pf.style.transform = 'perspective(900px) rotateY(' + (x * 7) + 'deg) rotateX(' + (-y * 7) + 'deg)';
-    });
-    port.addEventListener('mouseleave', function(){ pf.style.transform = ''; });
-  }
-}
+  if(!port || !pf) return;
+  port.addEventListener('mousemove', function(e){
+    var r = port.getBoundingClientRect();
+    var x = (e.clientX - r.left) / r.width - .5, y = (e.clientY - r.top) / r.height - .5;
+    pf.style.transform = 'perspective(900px) rotateY(' + (x * 7) + 'deg) rotateX(' + (-y * 7) + 'deg)';
+  });
+  port.addEventListener('mouseleave', function(){ pf.style.transform = ''; });
+});
 
-/* ------------------------------------------------------------
-   SCROLL PROGRESS · HEADER · ACTIVE SECTION
-   ------------------------------------------------------------ */
-(function(){
+/* --- progress bar, sticky header, active section --------------------------- */
+safe('chrome', function(){
   var prog = document.getElementById('prog'),
       hdr = document.getElementById('hdr'),
       railBtns = Array.prototype.slice.call(document.querySelectorAll('.railnav button')),
       navLinks = Array.prototype.slice.call(document.querySelectorAll('.hnav a')),
-      ids = ['top','capabilities','experience','skills','background','contact'],
-      ticking = false;
+      ids = ['top','capabilities','experience','skills','background','contact'];
 
-  function update(){
-    var d = document.documentElement,
-        max = d.scrollHeight - d.clientHeight,
-        y = d.scrollTop || document.body.scrollTop;
-    prog.style.width = (max > 0 ? (y / max) * 100 : 0) + '%';
-    hdr.classList.toggle('stuck', y > 40);
+  onScroll(function(){
+    var d = document.documentElement;
+    var y = window.pageYOffset || d.scrollTop || document.body.scrollTop || 0;
+    var max = (d.scrollHeight || 0) - (d.clientHeight || 0);
+    if(prog) prog.style.width = (max > 0 ? Math.max(0, Math.min(y / max, 1)) * 100 : 0) + '%';
+    if(hdr) hdr.classList.toggle('stuck', y > 40);
 
-    var cur = ids[0], probe = y + window.innerHeight * .38;
-    ids.forEach(function(id){
-      var el = document.getElementById(id);
-      if(el && el.offsetTop <= probe) cur = id;
-    });
+    var vh = window.innerHeight || d.clientHeight, cur = ids[0];
+    for(var i = 0; i < ids.length; i++){
+      var el = document.getElementById(ids[i]);
+      if(el && el.getBoundingClientRect().top <= vh * .38) cur = ids[i];
+    }
     railBtns.forEach(function(b){ b.classList.toggle('on', b.getAttribute('data-go') === cur); });
     navLinks.forEach(function(a){ a.classList.toggle('on', a.getAttribute('href') === '#' + cur); });
-    ticking = false;
-  }
-  window.addEventListener('scroll', function(){
-    if(!ticking){ ticking = true; requestAnimationFrame(update); }
-  }, {passive:true});
-  window.addEventListener('resize', update);
-  update();
+  });
 
   railBtns.forEach(function(b){
     b.addEventListener('click', function(){
@@ -1245,12 +1261,10 @@ if(!COARSE && !RM){
       if(el) el.scrollIntoView({behavior: RM ? 'auto' : 'smooth', block:'start'});
     });
   });
-})();
+});
 
-/* ------------------------------------------------------------
-   MOBILE MENU
-   ------------------------------------------------------------ */
-(function(){
+/* --- mobile menu ------------------------------------------------------------ */
+safe('menu', function(){
   var burger = document.getElementById('burger'), sheet = document.getElementById('sheet');
   if(!burger || !sheet) return;
   var links = Array.prototype.slice.call(sheet.querySelectorAll('a')), open = false;
@@ -1273,8 +1287,9 @@ if(!COARSE && !RM){
         a.style.opacity = '0';
         a.style.transform = 'translateY(24px)';
         requestAnimationFrame(function(){
-          a.style.transition = 'opacity .5s cubic-bezier(.22,1,.36,1) ' + (140 + i * 55) + 'ms,' +
-                               'transform .5s cubic-bezier(.22,1,.36,1) ' + (140 + i * 55) + 'ms';
+          var d = 140 + i * 55;
+          a.style.transition = 'opacity .5s cubic-bezier(.22,1,.36,1) ' + d + 'ms,' +
+                               'transform .5s cubic-bezier(.22,1,.36,1) ' + d + 'ms';
           a.style.opacity = '1';
           a.style.transform = '';
         });
@@ -1284,11 +1299,13 @@ if(!COARSE && !RM){
   burger.addEventListener('click', function(){ set(!open); });
   links.forEach(function(a){ a.addEventListener('click', function(){ set(false); }); });
   window.addEventListener('keydown', function(e){ if(e.key === 'Escape' && open) set(false); });
-  window.matchMedia('(min-width: 901px)').addEventListener('change', function(e){
-    if(e.matches && open) set(false);
-  });
-})();
+  var mq = window.matchMedia('(min-width: 901px)');
+  var onMq = function(e){ if(e.matches && open) set(false); };
+  if(mq.addEventListener) mq.addEventListener('change', onMq);
+  else if(mq.addListener) mq.addListener(onMq);
+});
 
+fireScroll();
 })();
 </script>
 </body>
