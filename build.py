@@ -1,11 +1,13 @@
 """Two builds from one source:
-   dist/index.html      -> for hosting (photo inlined, fonts from Google CDN)
-   portfolio-preview.html -> for the artifact (photo AND fonts inlined; CSP blocks CDNs)
+   dist/index.html        -> for hosting (photo inlined, fonts from Google CDN)
+   build/portfolio-preview.html -> single-file preview (photo AND fonts inlined,
+                                   for hosts whose CSP blocks CDNs)
+
+Fonts are fetched once from the npm registry into .fontcache/ and reused.
 """
-import base64, pathlib, re, sys
+import base64, os, pathlib, re, shutil, subprocess, sys, tarfile, tempfile
 
 root = pathlib.Path(__file__).resolve().parent
-scratch = pathlib.Path('/tmp/claude-0/-home-user-Code/49088d2e-9122-5d5a-a0b8-73fa0a091c5a/scratchpad')
 src = (root / 'index.html').read_text(encoding='utf-8')
 
 # ---- photo -> data URI -------------------------------------------------
@@ -23,29 +25,57 @@ dist.mkdir(exist_ok=True)
 (dist / 'index.html').write_text(hosted, encoding='utf-8')
 print(f'dist/index.html      {len(hosted.encode()) / 1024:6.0f} KB  (fonts via CDN)')
 
-# ---- artifact build: inline the fonts too ------------------------------
-FONTS = scratch / 'pfonts'
+# ---- font cache --------------------------------------------------------
+# Override with PORTFOLIO_FONT_CACHE=/some/dir if you already have the files.
+FONTS = pathlib.Path(os.environ.get('PORTFOLIO_FONT_CACHE', root / '.fontcache'))
+
 spec = [
-    ('Archivo',        'archivo',        [(400, None), (600, None), (800, None), (900, None)]),
-    ('IBM Plex Sans',  'ibm-plex-sans',  [(400, None), (500, None)]),
-    ('IBM Plex Mono',  'ibm-plex-mono',  [(400, None), (500, None), (600, None)]),
+    ('Archivo',       'archivo',       [400, 600, 800, 900]),
+    ('IBM Plex Sans', 'ibm-plex-sans', [400, 500]),
+    ('IBM Plex Mono', 'ibm-plex-mono', [400, 500, 600]),
 ]
+
+
+def face_path(pkg, weight):
+    return FONTS / pkg / 'files' / f'{pkg}-latin-{weight}-normal.woff2'
+
+
+def fetch(pkg):
+    """Pull @fontsource/<pkg> from the npm registry into the cache."""
+    dest = FONTS / pkg
+    with tempfile.TemporaryDirectory() as tmp:
+        tmp = pathlib.Path(tmp)
+        r = subprocess.run(['npm', 'pack', f'@fontsource/{pkg}', '--silent'],
+                           cwd=tmp, capture_output=True, text=True)
+        if r.returncode != 0:
+            raise RuntimeError(f'npm pack @fontsource/{pkg} failed: {r.stderr.strip()}')
+        tgz = next(tmp.glob('*.tgz'))
+        with tarfile.open(tgz) as t:
+            members = [m for m in t.getmembers() if m.name.startswith('package/files/')]
+            t.extractall(tmp, members=members)
+        dest.mkdir(parents=True, exist_ok=True)
+        if (dest / 'files').exists():
+            shutil.rmtree(dest / 'files')
+        shutil.copytree(tmp / 'package' / 'files', dest / 'files')
+
+
 faces = []
-missing = []
 for family, pkg, weights in spec:
-    for w, _ in weights:
-        f = FONTS / pkg / 'files' / f'{pkg}-latin-{w}-normal.woff2'
+    if any(not face_path(pkg, w).exists() for w in weights):
+        print(f'fetching @fontsource/{pkg} ...')
+        fetch(pkg)
+    for w in weights:
+        f = face_path(pkg, w)
         if not f.exists():
-            missing.append(str(f)); continue
+            sys.exit(f'font file still missing after fetch: {f}')
         b64 = base64.b64encode(f.read_bytes()).decode('ascii')
         faces.append(
             "@font-face{font-family:'%s';font-style:normal;font-weight:%d;font-display:swap;"
             "src:url(data:font/woff2;base64,%s) format('woff2')}" % (family, w, b64))
-if missing:
-    print('MISSING FONT FILES:', *missing, sep='\n  '); sys.exit(1)
 
+# ---- preview build: inline the fonts too --------------------------------
 art = hosted
-# drop CDN font tags — unreachable under the artifact CSP
+# drop CDN font tags — unreachable where the CSP blocks them
 art, n = re.subn(r'<link rel="preconnect"[^>]*>\s*', '', art)
 art, n2 = re.subn(r'<link href="https://fonts\.googleapis\.com[^>]*>\s*', '', art)
 assert n == 2 and n2 == 1, f'font tag removal off: preconnect={n} css={n2}'
@@ -54,8 +84,11 @@ style = re.search(r'<style>(.*?)</style>', art, re.S).group(1)
 body = re.search(r'<body>(.*)</body>', art, re.S).group(1)
 title = re.search(r'<title>(.*?)</title>', art, re.S).group(1)
 
-# the artifact host supplies <head>, so re-issue the js bootstrap that lived there
+# the preview host supplies <head>, so re-issue the js bootstrap that lived there
 boot = "<script>document.documentElement.className += ' js';</script>"
 out = f"<title>{title}</title>\n<style>\n{chr(10).join(faces)}\n{style}</style>\n{boot}\n{body}"
-(scratch / 'portfolio-preview.html').write_text(out, encoding='utf-8')
-print(f'artifact preview     {len(out.encode()) / 1024:6.0f} KB  (fonts inlined)')
+
+build = root / 'build'
+build.mkdir(exist_ok=True)
+(build / 'portfolio-preview.html').write_text(out, encoding='utf-8')
+print(f'build/portfolio-preview.html {len(out.encode()) / 1024:6.0f} KB  (fonts inlined)')

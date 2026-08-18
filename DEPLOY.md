@@ -131,10 +131,16 @@ Edit `index.html` (the readable one), then rebuild the upload file:
 python3 build.py     # writes dist/index.html
 ```
 
+It also writes `build/portfolio-preview.html` — the same page with the fonts
+embedded instead of loaded from Google, for previewing somewhere that blocks
+outside requests. You do not upload that one. The first run downloads the fonts
+into `.fontcache/` and reuses them after that; both folders are gitignored.
+
 Re-upload `dist/index.html`, overwriting the old one, and hard-refresh.
 
 - **Text, jobs, skills** — plain HTML. Skill chips need a `data-cat` of `data`, `crm`,
-  `out` or `mkt` so the filter picks them up.
+  `out` or `mkt` so the filter picks them up. If you add or remove chips, update the
+  matching `data-to` on the "Skills listed" counter so the number stays honest.
 - **Colours** — the `:root` block at the top of the `<style>`. `--signal` is the ember,
   `--data` the teal.
 - **Duration bars** — each has `data-m="<months>"`; the `MAX` constant in the experience
