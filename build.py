@@ -17,22 +17,33 @@ img_b64 = base64.b64encode(img).decode('ascii')
 assert len(img_b64) % 4 == 0
 
 REF = 'src="assets/images/jahir-hussain.webp"'
+DATA_URI = f'src="data:image/webp;base64,{img_b64}"'
 assert REF in src, 'photo reference not found'
-hosted = src.replace(REF, f'src="data:image/webp;base64,{img_b64}"', 1)
+hosted = src.replace(REF, DATA_URI, 1)
 
 dist = root / 'dist'
 dist.mkdir(exist_ok=True)
 (dist / 'index.html').write_text(hosted, encoding='utf-8')
 print(f'dist/index.html      {len(hosted.encode()) / 1024:6.0f} KB  (fonts via CDN)')
 
+# ---- second design: studio.html -> dist/studio.html ---------------------
+studio_src = (root / 'studio.html').read_text(encoding='utf-8')
+assert REF in studio_src, 'photo reference not found in studio.html'
+studio = studio_src.replace(REF, DATA_URI, 1)
+(dist / 'studio.html').write_text(studio, encoding='utf-8')
+print(f'dist/studio.html     {len(studio.encode()) / 1024:6.0f} KB  (fonts via CDN)')
+
 # ---- font cache --------------------------------------------------------
 # Override with PORTFOLIO_FONT_CACHE=/some/dir if you already have the files.
 FONTS = pathlib.Path(os.environ.get('PORTFOLIO_FONT_CACHE', root / '.fontcache'))
 
 spec = [
-    ('Archivo',       'archivo',       [400, 600, 800, 900]),
-    ('IBM Plex Sans', 'ibm-plex-sans', [400, 500]),
-    ('IBM Plex Mono', 'ibm-plex-mono', [400, 500, 600]),
+    ('Archivo',         'archivo',         [400, 600, 800, 900]),
+    ('IBM Plex Sans',   'ibm-plex-sans',   [400, 500]),
+    ('IBM Plex Mono',   'ibm-plex-mono',   [400, 500, 600]),
+    ('Anton',           'anton',           [400]),
+    ('Instrument Sans', 'instrument-sans', [400, 500, 600]),
+    ('Martian Mono',    'martian-mono',    [400, 600, 700]),
 ]
 
 
@@ -73,22 +84,26 @@ for family, pkg, weights in spec:
             "@font-face{font-family:'%s';font-style:normal;font-weight:%d;font-display:swap;"
             "src:url(data:font/woff2;base64,%s) format('woff2')}" % (family, w, b64))
 
-# ---- preview build: inline the fonts too --------------------------------
-art = hosted
-# drop CDN font tags — unreachable where the CSP blocks them
-art, n = re.subn(r'<link rel="preconnect"[^>]*>\s*', '', art)
-art, n2 = re.subn(r'<link href="https://fonts\.googleapis\.com[^>]*>\s*', '', art)
-assert n == 2 and n2 == 1, f'font tag removal off: preconnect={n} css={n2}'
+# ---- preview builds: inline the fonts too -------------------------------
+def preview(page, name):
+    """Strip the CDN font tags and re-emit as a head-less fragment with the
+    faces inlined, for hosts whose CSP blocks outside requests."""
+    art, n = re.subn(r'<link rel="preconnect"[^>]*>\s*', '', page)
+    art, n2 = re.subn(r'<link href="https://fonts\.googleapis\.com[^>]*>\s*', '', art)
+    assert n == 2 and n2 == 1, f'{name}: font tag removal off (preconnect={n} css={n2})'
 
-style = re.search(r'<style>(.*?)</style>', art, re.S).group(1)
-body = re.search(r'<body>(.*)</body>', art, re.S).group(1)
-title = re.search(r'<title>(.*?)</title>', art, re.S).group(1)
+    style = re.search(r'<style>(.*?)</style>', art, re.S).group(1)
+    body = re.search(r'<body>(.*)</body>', art, re.S).group(1)
+    title = re.search(r'<title>(.*?)</title>', art, re.S).group(1)
 
-# the preview host supplies <head>, so re-issue the js bootstrap that lived there
-boot = "<script>document.documentElement.className += ' js';</script>"
-out = f"<title>{title}</title>\n<style>\n{chr(10).join(faces)}\n{style}</style>\n{boot}\n{body}"
+    # the preview host supplies <head>, so re-issue the js bootstrap that lived there
+    boot = "<script>document.documentElement.className += \' js\';</script>"
+    out = f"<title>{title}</title>\n<style>\n{chr(10).join(faces)}\n{style}</style>\n{boot}\n{body}"
 
-build = root / 'build'
-build.mkdir(exist_ok=True)
-(build / 'portfolio-preview.html').write_text(out, encoding='utf-8')
-print(f'build/portfolio-preview.html {len(out.encode()) / 1024:6.0f} KB  (fonts inlined)')
+    build = root / 'build'
+    build.mkdir(exist_ok=True)
+    (build / name).write_text(out, encoding='utf-8')
+    print(f'build/{name:<24} {len(out.encode()) / 1024:6.0f} KB  (fonts inlined)')
+
+preview(hosted, 'portfolio-preview.html')
+preview(studio, 'studio-preview.html')

@@ -6,6 +6,7 @@ file. Nothing else needs uploading. Only the web fonts load from Google over the
 | File | What it is |
 | --- | --- |
 | `dist/index.html` | **Upload this.** Self-contained, ~230 KB. |
+| `dist/studio.html` | The second design — same content, video-inspired treatment. Also self-contained. |
 | `index.html` | Editable source (loads the photo from `assets/`). |
 | `build.py` | Regenerates `dist/index.html` after you edit the source. |
 
